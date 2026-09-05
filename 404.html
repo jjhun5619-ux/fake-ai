@@ -1,12 +1,52 @@
 <!doctype html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <meta http-equiv="refresh" content="0; url=/" />
-  <script>location.replace('/');</script>
-  <title>Redirecting…</title>
-</head>
-<body>
-  Redirecting to <a href="/">home</a>.
-</body>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Redirecting…</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#f7f7f8;color:#333}
+      .card{max-width:720px;padding:24px;border-radius:10px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,0.06);text-align:center}
+      a{color:#d97757;font-weight:600}
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>잠시만요 — 페이지를 불러오는 중입니다</h1>
+      <p>직접 접근한 경로는 GitHub Pages에서 404로 처리됩니다. 자동으로 홈으로 이동시키고 있습니다…</p>
+      <p id="link"><a href="/">홈으로 이동</a></p>
+    </div>
+
+    <script>
+      (function(){
+        try{
+          // GitHub Pages default: username.github.io/<repo>/... -> repo is first path segment
+          // For project pages served on username.github.io/repo/, use that base.
+          var host = location.hostname;
+          var path = location.pathname.split('/');
+
+          var base = '/';
+          if (host.endsWith('.github.io')) {
+            // project pages -> repo is path[1]
+            if (path.length >= 2 && path[1]) base = '/' + path[1] + '/';
+          } else {
+            // user provided custom domain -> root is '/'
+            base = '/';
+          }
+
+          // Preserve query/hash when redirecting
+          var dest = base + location.search + location.hash;
+
+          // If already at base, do nothing
+          if (location.pathname === base || location.pathname === base.slice(0,-1)) return;
+
+          // Use replace to avoid creating a history entry
+          location.replace(dest);
+        } catch (e) {
+          // fallback: go to site root
+          location.replace('/');
+        }
+      })();
+    </script>
+  </body>
 </html>
