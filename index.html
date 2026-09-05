@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAKE-ai</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7f7f8;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f9f9f9;
+            border-right: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            flex-shrink: 0;
+            height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .sidebar .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            padding: 4px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar .logo svg {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        .sidebar .logo .version {
+            font-size: 10px;
+            background: #f0f0f0;
+            color: #999;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar .new-chat-btn {
+            width: 100%;
+            padding: 11px;
+            background: #d97757;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+        .sidebar .new-chat-btn:hover { background: #c4653f; }
+
+        /* 관리자 API 설정 */
+        .api-settings-section {
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .api-settings-section.show { display: block; }
+        .api-settings-section .api-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .api-settings-section input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-bottom: 6px;
+            background: #fff;
+            outline: none;
+        }
+        .api-settings-section input:focus { border-color: #d97757; }
+        .api-settings-section .api-btn {
+            width: 100%;
+            padding: 6px;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .api-settings-section .api-btn:hover { background: #4338ca; }
+        .api-settings-section .api-status {
+            font-size: 11px;
+            margin-top: 6px;
+            text-align: center;
+        }
+        .api-settings-section .api-status.success { color: #16a34a; }
+        .api-settings-section .api-status.error { color: #dc2626; }
+
+        .template-section { margin-bottom: 12px; }
+        .template-section .template-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .template-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .template-list button {
+            padding: 4px 10px;
+            border: 1px solid #e5e5e5;
+            border-radius: 14px;
+            font-size: 11px;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .template-list button:hover {
+            border-color: #d97757;
+            color: #d97757;
+            background: #fef6f3;
+        }
+        .add-template-btn {
+            padding: 4px 10px;
+            border: 1px dashed #ccc;
+            border-radius: 14px;
+            font-size: 11px;
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-template-btn:hover {
+            border-color: #d97757;
+            color: #d97757;
+        }
+
+        .sidebar .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .sidebar .chat-list::-webkit-scrollbar { width: 4px; }
+        .sidebar .chat-list::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
+
+        .sidebar .chat-item {
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+            transition: background 0.2s;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sidebar .chat-item:hover { background: #e8e8e8; }
+        .sidebar .chat-item.active { background: #e0e0e0; font-weight: 500; }
+
+        .sidebar .bottom {
+            border-top: 1px solid #e5e5e5;
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        .sidebar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+        .sidebar .user-info .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d97757;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .sidebar .user-info .name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+        .sidebar .user-info .name .guest-tag {
+            font-size: 9px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 4px;
+        }
+        .sidebar .user-info .logout {
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .sidebar .user-info .logout:hover { color: #e74c3c; }
+
+        .sidebar-ad {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 10px;
+            padding: 12px;
+            margin: 8px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .sidebar-ad:hover { transform: scale(1.02); }
+        .sidebar-ad .ad-title { color: #fff; font-size: 13px; font-weight: 600; }
+        .sidebar-ad .ad-desc { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 2px; }
+        .sidebar-ad .ad-btn {
+            display: inline-block;
+            background: #d97757;
+            color: #fff;
+            padding: 3px 14px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #fff;
+            position: relative;
+        }
+
+        .main-header {
+            padding: 10px 20px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            background: #fff;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .main-header .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .main-header .title .model-badge {
+            font-size: 10px;
+            background: #f0f0f0;
+            color: #999;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 400;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 4px;
+            background: #f0f0f0;
+            padding: 3px;
+            border-radius: 10px;
+        }
+        .mode-selector button {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: #666;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mode-selector button.active { background: #d97757; color: #fff; }
+        .mode-selector button:hover:not(.active) { background: #e5e5e5; }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #888;
+            background: #f5f5f5;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        .header-status .limit-badge { color: #e65100; font-weight: 600; }
+        .header-status .admin-badge { color: #c62828; font-weight: 600; }
+        .header-status .no-ad-badge { color: #2e7d32; font-weight: 600; }
+        .header-status .learning-badge {
+            background: #7c3aed;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            display: none;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 8px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .chat-area::-webkit-scrollbar { width: 6px; }
+        .chat-area::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 88%;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message.user .bubble { background: #d97757; color: #fff; border-radius: 16px 16px 4px 16px; }
+
+        .message.claude { align-self: flex-start; }
+        .message.claude .bubble { background: #f0f0f0; color: #1a1a1a; border-radius: 16px 16px 16px 4px; }
+
+        .message.ad {
+            align-self: center;
+            max-width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+        .message.ad .bubble {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.2s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        .message.ad .bubble:hover { transform: scale(1.02); }
+        .message.ad .bubble .ad-title { font-size: 18px; font-weight: 700; }
+        .message.ad .bubble .ad-desc { color: rgba(255,255,255,0.6); font-size: 13px; margin: 4px 0 8px; }
+        .message.ad .bubble .ad-btn {
+            display: inline-block;
+            background: #d97757;
+            color: #fff;
+            padding: 6px 22px;
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .message.ad .bubble .ad-skip {
+            display: block;
+            margin-top: 8px;
+            color: rgba(255,255,255,0.25);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .message.ad .bubble .ad-skip:hover { color: rgba(255,255,255,0.6); }
+
+        .avatar-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .message.user .avatar-icon { background: #d97757; color: #fff; }
+        .message.claude .avatar-icon { background: #e5e5e5; color: #555; }
+
+        .bubble {
+            padding: 10px 14px;
+            line-height: 1.6;
+            font-size: 14px;
+            word-break: break-word;
+            position: relative;
+        }
+        .bubble pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin: 6px 0;
+        }
+        .bubble code {
+            background: rgba(0,0,0,0.06);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 3px;
+            margin-top: 6px;
+            justify-content: flex-end;
+            opacity: 0.2;
+            transition: opacity 0.3s;
+        }
+        .bubble:hover .feedback-buttons { opacity: 1; }
+        .feedback-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 1px 3px;
+            transition: transform 0.2s;
+            border-radius: 4px;
+        }
+        .feedback-buttons button:hover { transform: scale(1.3); background: rgba(0,0,0,0.05); }
+        .message.user .feedback-buttons { display: none; }
+
+        .typing-indicator {
+            align-self: flex-start;
+            display: none;
+            gap: 10px;
+        }
+        .typing-indicator.show { display: flex; }
+        .typing-dots {
+            background: #f0f0f0;
+            padding: 12px 18px;
+            border-radius: 16px 16px 16px 4px;
+            display: flex;
+            gap: 4px;
+        }
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: #888;
+            border-radius: 50%;
+            animation: dotBounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0s; }
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .input-area {
+            padding: 14px 20px 20px 20px;
+            border-top: 1px solid #e5e5e5;
+            background: #fff;
+            flex-shrink: 0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .input-area textarea {
+            flex: 1;
+            resize: none;
+            padding: 10px 14px;
+            border: 1px solid #d1d1d1;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            min-height: 42px;
+            max-height: 160px;
+            line-height: 1.5;
+            background: #fff;
+            transition: border 0.2s;
+        }
+        .input-area textarea:focus {
+            border-color: #d97757;
+            box-shadow: 0 0 0 3px rgba(217,119,87,0.1);
+        }
+        .input-area .send-btn {
+            padding: 10px 20px;
+            background: #d97757;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            height: 42px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .input-area .send-btn:hover:not(:disabled) { background: #c4653f; }
+        .input-area .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .footer-ad {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+            cursor: pointer;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+        .footer-ad:hover { background: linear-gradient(135deg, #1e1e3a 0%, #1a2745 100%); }
+        .footer-ad .ad-text {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .footer-ad .ad-text strong { color: #ffd700; font-weight: 600; }
+        .footer-ad .ad-cta {
+            background: #d97757;
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .footer-ad.hidden { display: none; }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #333;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        .template-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .template-modal.show { display: flex; }
+        .template-modal .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            width: 90%;
+            max-width: 440px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .template-modal .modal-box h3 { font-size: 18px; margin-bottom: 16px; }
+        .template-modal .modal-box input,
+        .template-modal .modal-box textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+            font-family: inherit;
+        }
+        .template-modal .modal-box input:focus,
+        .template-modal .modal-box textarea:focus { border-color: #d97757; }
+        .template-modal .modal-box textarea { height: 80px; resize: vertical; }
+        .template-modal .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .template-modal .modal-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .template-modal .modal-actions .btn-save { background: #d97757; color: #fff; }
+        .template-modal .modal-actions .btn-save:hover { background: #c4653f; }
+        .template-modal .modal-actions .btn-cancel { background: #f0f0f0; color: #666; }
+        .template-modal .modal-actions .btn-cancel:hover { background: #e5e5e5; }
+
+        @media (max-width: 700px) {
+            .sidebar { display: none; }
+            .sidebar.mobile-open {
+                display: flex;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 280px;
+                z-index: 1000;
+                box-shadow: 0 0 40px rgba(0,0,0,0.2);
+            }
+            .mobile-menu-btn { display: block; }
+            .main { height: 100vh; }
+            .main-header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
+            .main-header .mode-selector { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .main-header .mode-selector button { font-size: 10px; padding: 4px 8px; }
+            .chat-area { padding: 14px 14px 4px 14px; }
+            .input-area { padding: 10px 14px 14px 14px; flex-wrap: wrap; }
+            .input-area textarea { min-height: 36px; font-size: 13px; }
+            .input-area .send-btn { height: 38px; font-size: 13px; padding: 8px 16px; }
+            .message.ad .bubble { padding: 14px; }
+            .message.ad .bubble .ad-title { font-size: 16px; }
+            .footer-ad { flex-direction: column; text-align: center; padding: 10px 14px; }
+            .footer-ad .ad-text { font-size: 11px; flex-wrap: wrap; justify-content: center; }
+            .template-list button { font-size: 10px; padding: 3px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== 모바일 오버레이 ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ===== 템플릿 모달 ===== -->
+<div class="template-modal" id="templateModal">
+    <div class="modal-box">
+        <h3>📋 프롬프트 템플릿 추가</h3>
+        <input type="text" id="templateNameInput" placeholder="템플릿 이름" />
+        <input type="text" id="templateIconInput" placeholder="아이콘 (예: 🔍)" />
+        <textarea id="templateContentInput" placeholder="프롬프트 내용을 입력하세요..."></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeTemplateModal()">취소</button>
+            <button class="btn-save" onclick="saveTemplate()">저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 사이드바 ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="logo">
+        <svg viewBox="0 0 1024 1024" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="fGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="45%" stop-color="#dfe7ff"/>
+                    <stop offset="100%" stop-color="#7aa7ff"/>
+                </linearGradient>
+                <linearGradient id="aiGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#168cff"/>
+                    <stop offset="55%" stop-color="#315cff"/>
+                    <stop offset="100%" stop-color="#b24cff"/>
+                </linearGradient>
+                <linearGradient id="orbitGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#00eaff"/>
+                    <stop offset="50%" stop-color="#168cff"/>
+                    <stop offset="100%" stop-color="#d64cff"/>
+                </linearGradient>
+                <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="softGlow"><feGaussianBlur stdDeviation="10"/></filter>
+            </defs>
+            <rect width="1024" height="1024" rx="180" fill="#050505"/>
+            <ellipse cx="512" cy="430" rx="270" ry="270" fill="#1268ff" opacity="0.12" filter="url(#softGlow)"/>
+            <path d="M365 655 L430 265 L720 265 L685 340 L505 340 L490 425 L650 425 L615 500 L478 500 L450 655 Z" fill="url(#fGradient)" stroke="#4e8cff" stroke-width="5" filter="url(#glow)"/>
+            <path d="M450 620 L478 500 L615 500" fill="none" stroke="#168cff" stroke-width="14" opacity="0.75"/>
+            <ellipse cx="512" cy="455" rx="315" ry="125" transform="rotate(-25 512 455)" fill="none" stroke="url(#orbitGradient)" stroke-width="15" filter="url(#glow)"/>
+            <path d="M760 185 L773 220 L808 233 L773 246 L760 282 L747 246 L712 233 L747 220 Z" fill="#53dfff" filter="url(#glow)"/>
+            <text x="512" y="805" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-8" fill="url(#fGradient)">Fake</text>
+            <text x="730" y="805" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-8" fill="url(#aiGradient)">.ai</text>
+            <path d="M300 850 Q512 875 724 850" fill="none" stroke="url(#orbitGradient)" stroke-width="5" opacity="0.8"/>
+        </svg>
+        <span>PAKE-ai</span>
+        <span class="version">✦ v2</span>
+    </div>
+
+    <button class="new-chat-btn" onclick="newChat()">+ 새 대화</button>
+
+    <!-- 관리자 API 설정 -->
+    <div class="api-settings-section" id="apiSettingsSection">
+        <div class="api-title">🔧 Supabase API 설정</div>
+        <input type="text" id="supabaseUrl" placeholder="Supabase URL" />
+        <input type="password" id="supabaseAnon" placeholder="ANON Key" />
+        <input type="password" id="supabaseService" placeholder="Service Role Key" />
+        <button class="api-btn" onclick="saveSupabaseConfig()">💾 저장 및 연결</button>
+        <div class="api-status" id="apiStatus"></div>
+    </div>
+
+    <!-- 템플릿 -->
+    <div class="template-section" id="templateSection">
+        <div class="template-label">📋 프롬프트 템플릿</div>
+        <div class="template-list" id="templateList">
+            <button class="add-template-btn" onclick="openTemplateModal()">+ 추가</button>
+        </div>
+    </div>
+
+    <div class="sidebar-ad" id="sidebarAd" onclick="window.open('https://chat.enn.kr', '_blank')">
+        <div class="ad-title">💬 chat.enn.kr</div>
+        <div class="ad-desc">무료 AI 채팅 서비스</div>
+        <span class="ad-btn">바로가기 →</span>
+    </div>
+
+    <div class="chat-list" id="chatList"></div>
+
+    <div class="bottom">
+        <div class="user-info">
+            <div class="avatar" id="userAvatar">U</div>
+            <span class="name" id="userName">
+                사용자
+                <span class="guest-tag" id="guestTag" style="display:none;">게스트</span>
+            </span>
+            <span class="logout" onclick="logout()">로그아웃</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 메인 ===== -->
+<div class="main">
+
+    <div class="main-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+            <span class="title">
+                PAKE-ai
+                <span class="model-badge" id="modelBadge">Claude 4.5</span>
+            </span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <div class="mode-selector">
+                <button class="active" data-mode="fake" onclick="changeMode('fake')">
+                    🌿 Fake
+                </button>
+                <button data-mode="fakecode" onclick="changeMode('fakecode')">
+                    💻 FakeCode
+                </button>
+                <button data-mode="fakecodev2" onclick="changeMode('fakecodev2')">
+                    🧠 FakeCode v2
+                </button>
+            </div>
+
+            <span class="header-status" id="headerStatus">
+                <span id="statusText">🌿 일상생활 (무제한)</span>
+                <span class="limit-badge" id="limitBadge" style="display:none;"></span>
+                <span class="admin-badge" id="adminBadge" style="display:none;">🛡️</span>
+                <span class="no-ad-badge" id="noAdBadge" style="display:none;">🚫광고</span>
+                <span class="learning-badge" id="learningBadge">🧠 학습중</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="chat-area" id="chatArea">
+        <div class="message claude">
+            <div class="avatar-icon">P</div>
+            <div class="bubble">
+                <p><strong>👋 안녕하세요! PAKE-ai입니다.</strong></p>
+                <p>당신의 AI 어시스턴트로서 도움을 드리겠습니다.</p>
+                <p style="font-size:12px; color:#888; margin-top:4px;">
+                    🌿 <strong>Fake</strong> (Claude 3.5) 일상생활 · 
+                    💻 <strong>FakeCode</strong> (Claude Free) 코딩 2번째 · 
+                    🧠 <strong>FakeCode v2</strong> (Claude 4.7) 코딩 최강 (하루 5회)
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="avatar-icon">P</div>
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="input-area">
+        <textarea id="userInput" rows="1" placeholder="메시지를 입력하세요..." disabled></textarea>
+        <button class="send-btn" id="sendBtn" disabled onclick="sendMessage()">전송 →</button>
+    </div>
+
+    <div class="footer-ad" id="footerAd" onclick="window.open('https://chat.enn.kr', '_blank')">
+        <div class="ad-text">
+            <span>🌟</span>
+            <span><strong>chat.enn.kr</strong> - 무료 AI 채팅 서비스</span>
+        </div>
+        <span class="ad-cta">이동하기 →</span>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    //  전역 상태
+    // ============================================================
+    const API_BASE = 'http://localhost:3000';
+
+    let token = localStorage.getItem('pake_token') || '';
+    let guestSessionId = localStorage.getItem('pake_guest_session') || '';
+    let isGuest = false;
+    let guestRemaining = parseInt(localStorage.getItem('pake_guest_remaining')) || 0;
+    let isAdmin = false;
+
+    let currentUser = null;
+    let chatHistory = [];
+    let currentChatId = Date.now().toString();
+    let allChats = JSON.parse(localStorage.getItem('pake_all_chats')) || {};
+    let isProcessing = false;
+    let currentMode = 'fake';
+    let lastUserMessage = '';
+    let lastAIResponse = '';
+    let dailyRemaining = 5;
+    let templates = [];
+    let notificationPermission = false;
+
+    let messageCount = parseInt(localStorage.getItem('pake_message_count')) || 0;
+    const AD_INTERVAL = 7;
+    let adsEnabled = true;
+
+    // ===== 모드 설정 (표시 이름 + 실제 모델) =====
+    const modeConfig = {
+        'fake': {
+            label: 'Fake',
+            displayName: 'Claude 3.5',
+            model: 'claude-haiku-4-5',
+            status: '🌿 일상생활 (무제한)',
+            icon: '🌿'
+        },
+        'fakecode': {
+            label: 'FakeCode',
+            displayName: 'Claude Free',
+            model: 'claude-sonnet-4-6',
+            status: '💻 코딩 2번째 (무제한)',
+            icon: '💻'
+        },
+        'fakecodev2': {
+            label: 'FakeCode v2',
+            displayName: 'Claude 4.7',
+            model: 'claude-opus-4-7',
+            status: '🧠 코딩 최강 (하루 5회)',
+            icon: '🧠'
+        }
+    };
+
+    // DOM
+    const chatArea = document.getElementById('chatArea');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const chatList = document.getElementById('chatList');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const guestTag = document.getElementById('guestTag');
+    const sidebarAd = document.getElementById('sidebarAd');
+    const footerAd = document.getElementById('footerAd');
+    const statusText = document.getElementById('statusText');
+    const limitBadge = document.getElementById('limitBadge');
+    const adminBadge = document.getElementById('adminBadge');
+    const noAdBadge = document.getElementById('noAdBadge');
+    const templateList = document.getElementById('templateList');
+    const learningBadge = document.getElementById('learningBadge');
+    const apiSettingsSection = document.getElementById('apiSettingsSection');
+    const supabaseUrl = document.getElementById('supabaseUrl');
+    const supabaseAnon = document.getElementById('supabaseAnon');
+    const supabaseService = document.getElementById('supabaseService');
+    const apiStatus = document.getElementById('apiStatus');
+    const modelBadge = document.getElementById('modelBadge');
+
+    // ============================================================
+    //  Supabase 설정
+    // ============================================================
+    function loadSupabaseSettings() {
+        supabaseUrl.value = localStorage.getItem('supabase_url') || '';
+        supabaseAnon.value = localStorage.getItem('supabase_anon') || '';
+        supabaseService.value = localStorage.getItem('supabase_service') || '';
+    }
+
+    function saveSupabaseSettings() {
+        localStorage.setItem('supabase_url', supabaseUrl.value.trim());
+        localStorage.setItem('supabase_anon', supabaseAnon.value.trim());
+        localStorage.setItem('supabase_service', supabaseService.value.trim());
+    }
+
+    async function saveSupabaseConfig() {
+        const url = supabaseUrl.value.trim();
+        const anon = supabaseAnon.value.trim();
+        const service = supabaseService.value.trim();
+
+        if (!url || !anon || !service) {
+            apiStatus.textContent = '❌ 모든 필드를 입력해주세요.';
+            apiStatus.className = 'api-status error';
+            return;
+        }
+
+        saveSupabaseSettings();
+
+        apiStatus.textContent = '⏳ 연결 중...';
+        apiStatus.className = 'api-status';
+
+        try {
+            const res = await fetch(API_BASE + '/api/supabase/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, anon, service })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                apiStatus.textContent = '✅ ' + data.message;
+                apiStatus.className = 'api-status success';
+                if (token) {
+                    alert('✅ Supabase 연결 완료! 페이지를 새로고침해주세요.');
+                    window.location.reload();
+                }
+            } else {
+                apiStatus.textContent = '❌ ' + (data.error || '연결 실패');
+                apiStatus.className = 'api-status error';
+            }
+        } catch (err) {
+            apiStatus.textContent = '❌ 서버 연결 실패: ' + err.message;
+            apiStatus.className = 'api-status error';
+        }
+    }
+
+    // ============================================================
+    //  알림
+    // ============================================================
+    function requestNotificationPermission() {
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') notificationPermission = true;
+            else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(p => notificationPermission = p === 'granted');
+            }
+        }
+    }
+
+    function sendNotification(title, body) {
+        if (notificationPermission && document.hidden) {
+            try { new Notification(title, { body, icon: '/logo.svg' }); } catch (e) {}
+        }
+    }
+
+    // ============================================================
+    //  초기화
+    // ============================================================
+    async function init() {
+        requestNotificationPermission();
+        loadSupabaseSettings();
+
+        if (token) {
+            try {
+                const res = await fetch(API_BASE + '/api/user/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.user) {
+                    currentUser = data.user;
+                    isAdmin = data.user.isAdmin || false;
+                    templates = data.user.templates || [];
+                    if (isAdmin) {
+                        adsEnabled = false;
+                        sidebarAd.style.display = 'none';
+                        footerAd.classList.add('hidden');
+                        adminBadge.style.display = 'inline';
+                        noAdBadge.style.display = 'inline';
+                        learningBadge.style.display = 'inline';
+                        apiSettingsSection.classList.add('show');
+                        await loadAdminChats();
+                    }
+                    if (data.user.dailyUsage) {
+                        dailyRemaining = data.user.dailyUsage.remaining;
+                    }
+                    isGuest = false;
+                    updateUserInfo();
+                    enableChat(true);
+                    loadChatsFromServer();
+                    updateStatus();
+                    renderTemplates();
+                    return;
+                }
+            } catch (e) {}
+            localStorage.removeItem('pake_token');
+            token = '';
+        }
+
+        if (guestSessionId) {
+            try {
+                const res = await fetch(API_BASE + '/api/guest/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: guestSessionId })
+                });
+                const data = await res.json();
+                if (data.active && data.remaining > 0) {
+                    isGuest = true;
+                    guestRemaining = data.remaining;
+                    localStorage.setItem('pake_guest_remaining', guestRemaining);
+                    currentUser = { username: '게스트', isGuest: true };
+                    updateUserInfo();
+                    enableChat(true);
+                    loadChatsLocal();
+                    updateStatus();
+                    return;
+                } else {
+                    localStorage.removeItem('pake_guest_session');
+                    localStorage.removeItem('pake_guest_remaining');
+                    guestSessionId = '';
+                }
+            } catch (e) {}
+        }
+
+        window.location.href = '/login.html';
+    }
+
+    // ============================================================
+    //  UI
+    // ============================================================
+    function updateUserInfo() {
+        if (currentUser) {
+            userAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+            userName.innerHTML = currentUser.username;
+            if (currentUser.isGuest) {
+                guestTag.style.display = 'inline';
+                guestTag.textContent = '게스트';
+            } else {
+                guestTag.style.display = 'none';
+            }
+        }
+    }
+
+    function enableChat(enabled) {
+        userInput.disabled = !enabled;
+        sendBtn.disabled = !enabled;
+        if (enabled) {
+            userInput.placeholder = '메시지를 입력하세요...';
+            userInput.focus();
+        } else {
+            userInput.placeholder = '⛔ 로그인이 필요합니다';
+        }
+    }
+
+    function toggleMobileSidebar() {
+        document.getElementById('sidebar').classList.toggle('mobile-open');
+        document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function closeMobileSidebar() {
+        document.getElementById('sidebar').classList.remove('mobile-open');
+        document.getElementById('sidebarOverlay').classList.remove('show');
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login.html';
+    }
+
+    // ============================================================
+    //  모드 변경
+    // ============================================================
+    function changeMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-selector button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+        updateStatus();
+        if (!isAdmin) checkDailyLimit();
+    }
+
+    function updateStatus() {
+        const config = modeConfig[currentMode];
+        statusText.textContent = config.status;
+        modelBadge.textContent = config.displayName;
+
+        if (isAdmin) {
+            limitBadge.style.display = 'none';
+            adminBadge.style.display = 'inline';
+            noAdBadge.style.display = 'inline';
+            return;
+        }
+
+        if (currentMode === 'fakecodev2') {
+            limitBadge.style.display = 'inline';
+            limitBadge.textContent = ` ${dailyRemaining}/5회 남음`;
+            limitBadge.style.color = dailyRemaining <= 0 ? '#dc2626' : '#e65100';
+        } else {
+            limitBadge.style.display = 'none';
+        }
+    }
+
+    // ============================================================
+    //  제한 확인
+    // ============================================================
+    async function checkDailyLimit() {
+        if (isAdmin || currentMode !== 'fakecodev2') return true;
+        if (token) {
+            try {
+                const res = await fetch(API_BASE + '/api/usage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.remaining !== undefined) {
+                    dailyRemaining = data.remaining;
+                    updateStatus();
+                    return dailyRemaining > 0;
+                }
+            } catch (e) {}
+        }
+        return true;
+    }
+
+    // ============================================================
+    //  📋 템플릿
+    // ============================================================
+    function openTemplateModal() {
+        document.getElementById('templateModal').classList.add('show');
+        document.getElementById('templateNameInput').value = '';
+        document.getElementById('templateIconInput').value = '';
+        document.getElementById('templateContentInput').value = '';
+        document.getElementById('templateNameInput').focus();
+    }
+
+    function closeTemplateModal() {
+        document.getElementById('templateModal').classList.remove('show');
+    }
+
+    async function saveTemplate() {
+        const name = document.getElementById('templateNameInput').value.trim();
+        const content = document.getElementById('templateContentInput').value.trim();
+        const icon = document.getElementById('templateIconInput').value.trim() || '📝';
+
+        if (!name || !content) {
+            alert('이름과 내용을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const res = await fetch(API_BASE + '/api/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, name, content, icon })
+            });
+            const data = await res.json();
+            if (data.success) {
+                templates = data.templates;
+                renderTemplates();
+                closeTemplateModal();
+                sendNotification('✅ 템플릿 저장됨', `${name} 템플릿이 저장되었습니다.`);
+            }
+        } catch (err) {
+            alert('저장 실패: ' + err.message);
+        }
+    }
+
+    function renderTemplates() {
+        templateList.innerHTML = '';
+        templates.forEach(t => {
+            const btn = document.createElement('button');
+            btn.innerHTML = `<span class="template-icon">${t.icon || '📝'}</span> ${t.name}`;
+            btn.onclick = () => applyTemplate(t);
+            templateList.appendChild(btn);
+        });
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-template-btn';
+        addBtn.textContent = '+ 추가';
+        addBtn.onclick = openTemplateModal;
+        templateList.appendChild(addBtn);
+    }
+
+    function applyTemplate(template) {
+        userInput.value = template.content;
+        userInput.focus();
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 160) + 'px';
+    }
+
+    // ============================================================
+    //  👑 admin 채팅 영구 저장
+    // ============================================================
+    async function saveAdminChat(chatId, messages, mode, title) {
+        if (!isAdmin) return;
+        try {
+            await fetch(API_BASE + '/api/admin/chats/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, chatId, messages, mode, title: title || '새 대화' })
+            });
+        } catch (err) { console.error('admin 저장 실패:', err); }
+    }
+
+    async function loadAdminChats() {
+        if (!isAdmin) return;
+        try {
+            const res = await fetch(API_BASE + '/api/admin/chats/load', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            if (data.chats && data.chats.length > 0) {
+                data.chats.forEach(chat => {
+                    allChats[chat.chat_id] = {
+                        title: chat.title || '새 대화',
+                        messages: chat.messages || [],
+                        updated: new Date(chat.updated_at).getTime(),
+                        mode: chat.mode || 'fake'
+                    };
+                });
+                renderChatList();
+                const latest = data.chats[0];
+                if (latest) {
+                    currentChatId = latest.chat_id;
+                    loadChat(currentChatId);
+                }
+            }
+        } catch (err) { console.error('admin 불러오기 실패:', err); }
+    }
+
+    // ============================================================
+    //  📊 admin 대시보드
+    // ============================================================
+    async function showAdminDashboard() {
+        if (!isAdmin) { alert('관리자만 사용 가능합니다.'); return; }
+
+        try {
+            const res = await fetch(API_BASE + '/api/admin/dashboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            const d = data.dashboard;
+
+            const response = `
+📊 **PAKE-ai Admin 대시보드**
+
+🧠 **Claude 4.8 개발 현황**
+- 진행률: ${d.claude48.progress}%
+- 데이터: ${d.claude48.dataCount}개 / ${d.claude48.target}개
+- 상태: ${d.claude48.status}
+
+📚 **학습 데이터**
+- 전체: ${d.totalTraining}개
+- 고품질: ${d.highQualityData}개
+- 오늘: ${d.todayData}개
+- 평균 평점: ${d.avgRating}/5
+
+💬 **채팅**
+- 총 대화: ${d.chatCount}개
+
+📊 **모드별 분포**
+${Object.entries(d.modeDistribution).map(([k,v]) => `  - ${k}: ${v}개`).join('\n')}
+
+🕐 마지막 업데이트: ${new Date(d.lastUpdated).toLocaleString()}
+
+---
+💡 명령어:
+/claude48 - Claude 4.8 진행 상황
+/claude48 [질문] - Claude 4.8에 질문
+/stats - 학습 통계
+/donate - Claude 4.8 기증
+/dashboard - 이 대시보드 다시 보기
+`;
+            addMessage('claude', response);
+        } catch (err) {
+            addMessage('claude', `❌ 대시보드 오류: ${err.message}`);
+        }
+    }
+
+    // ============================================================
+    //  광고
+    // ============================================================
+    function addAdMessage() {
+        if (adsEnabled) {
+            const div = document.createElement('div');
+            div.className = 'message ad';
+            div.innerHTML = `
+                <div class="bubble" onclick="window.open('https://chat.enn.kr', '_blank')">
+                    <div style="font-size:28px; margin-bottom:4px;">💬</div>
+                    <div class="ad-title">chat.enn.kr</div>
+                    <div class="ad-desc">무료 AI 채팅 서비스를 만나보세요!</div>
+                    <span class="ad-btn">지금 바로가기 →</span>
+                    <span class="ad-skip" onclick="event.stopPropagation(); this.parentElement.parentElement.remove();">✕ 건너뛰기</span>
+                </div>
+            `;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+    }
+
+    // ============================================================
+    //  채팅
+    // ============================================================
+    function loadChatsLocal() {
+        const saved = localStorage.getItem('pake_all_chats');
+        if (saved) {
+            allChats = JSON.parse(saved);
+            const ids = Object.keys(allChats);
+            if (ids.length > 0) { currentChatId = ids[0]; loadChat(currentChatId); } else newChat();
+            renderChatList();
+        } else newChat();
+    }
+
+    async function loadChatsFromServer() {
+        if (!token || isGuest) { loadChatsLocal(); return; }
+        try {
+            const res = await fetch(API_BASE + '/api/chats/load', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            if (data.chats) {
+                allChats = data.chats;
+                const ids = Object.keys(allChats);
+                if (ids.length > 0) { currentChatId = ids[0]; loadChat(currentChatId); } else newChat();
+                renderChatList();
+            }
+        } catch (e) { loadChatsLocal(); }
+    }
+
+    async function saveChatsToServer() {
+        if (!token || isGuest) { localStorage.setItem('pake_all_chats', JSON.stringify(allChats)); return; }
+        try {
+            await fetch(API_BASE + '/api/chats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, chats: allChats })
+            });
+        } catch (e) {}
+    }
+
+    function addMessage(role, content, save = true) {
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar-icon';
+        avatar.textContent = role === 'user' ? '나' : 'P';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = formatContent(content);
+        bubble.appendChild(contentDiv);
+
+        if (role === 'claude') {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-buttons';
+            feedback.innerHTML = `
+                <button onclick="rateMessage(this, 5)">⭐</button>
+                <button onclick="rateMessage(this, 4)">👍</button>
+                <button onclick="rateMessage(this, 3)">👌</button>
+                <button onclick="rateMessage(this, 2)">👎</button>
+                <button onclick="rateMessage(this, 1)">💩</button>
+            `;
+            bubble.appendChild(feedback);
+        }
+
+        div.appendChild(avatar);
+        div.appendChild(bubble);
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        if (save) {
+            chatHistory.push({ role, content });
+            saveChat();
+        }
+    }
+
+    function formatContent(text) {
+        return text
+            .replace(/\n/g, '<br>')
+            .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+
+    function saveChat() {
+        const title = chatHistory.length > 0
+            ? chatHistory[0].content.slice(0, 25) + (chatHistory[0].content.length > 25 ? '...' : '')
+            : '새 대화';
+        allChats[currentChatId] = { title, messages: chatHistory, updated: Date.now(), mode: currentMode };
+        renderChatList();
+        saveChatsToServer();
+
+        if (isAdmin && token) {
+            saveAdminChat(currentChatId, chatHistory, currentMode, title);
+        }
+    }
+
+    function loadChat(id) {
+        const chat = allChats[id];
+        if (!chat) return;
+        currentChatId = id;
+        chatHistory = chat.messages || [];
+        if (chat.mode) currentMode = chat.mode;
+        chatArea.innerHTML = '';
+        chatHistory.forEach(msg => addMessage(msg.role, msg.content, false));
+        if (chatHistory.length === 0) {
+            const div = document.createElement('div');
+            div.className = 'message claude';
+            div.innerHTML = `<div class="avatar-icon">P</div><div class="bubble"><p>👋 안녕하세요!</p></div>`;
+            chatArea.appendChild(div);
+        }
+        renderChatList();
+        updateStatus();
+        messageCount = chatHistory.length;
+        localStorage.setItem('pake_message_count', messageCount);
+    }
+
+    function newChat() {
+        currentChatId = Date.now().toString();
+        chatHistory = [];
+        chatArea.innerHTML = '';
+        const div = document.createElement('div');
+        div.className = 'message claude';
+        div.innerHTML = `<div class="avatar-icon">P</div><div class="bubble"><p>👋 안녕하세요! 무엇을 도와드릴까요?</p></div>`;
+        chatArea.appendChild(div);
+        renderChatList();
+        userInput.focus();
+        messageCount = 0;
+        localStorage.setItem('pake_message_count', 0);
+    }
+
+    function renderChatList() {
+        chatList.innerHTML = '';
+        const ids = Object.keys(allChats).sort((a, b) => allChats[b].updated - allChats[a].updated);
+        const iconMap = {
+            'fake': '🌿',
+            'fakecode': '💻',
+            'fakecodev2': '🧠'
+        };
+        const labelMap = {
+            'fake': 'Fake',
+            'fakecode': 'FakeCode',
+            'fakecodev2': 'FakeCode v2'
+        };
+
+        ids.forEach(id => {
+            const item = document.createElement('div');
+            item.className = `chat-item${id === currentChatId ? ' active' : ''}`;
+            const mode = allChats[id].mode || 'fake';
+            item.textContent = `${iconMap[mode] || '📝'} ${allChats[id].title || '대화'}`;
+            item.onclick = () => loadChat(id);
+            chatList.appendChild(item);
+        });
+        if (ids.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'color:#999;font-size:12px;padding:20px 0;text-align:center;';
+            empty.textContent = '아직 대화가 없습니다.';
+            chatList.appendChild(empty);
+        }
+    }
+
+    // ============================================================
+    //  📚 피드백
+    // ============================================================
+    async function rateMessage(btn, rating) {
+        if (!lastUserMessage || !lastAIResponse) { alert('평가할 메시지가 없습니다.'); return; }
+        btn.textContent = '⏳';
+        btn.disabled = true;
+        try {
+            await fetch(API_BASE + '/api/training/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: token || undefined,
+                    sessionId: isGuest ? guestSessionId : undefined,
+                    userMessage: lastUserMessage,
+                    aiResponse: lastAIResponse,
+                    rating: rating,
+                    mode: currentMode
+                })
+            });
+
+            if (isAdmin) {
+                await fetch(API_BASE + '/api/learning/admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        userMessage: lastUserMessage,
+                        aiResponse: lastAIResponse,
+                        mode: currentMode,
+                        rating: rating
+                    })
+                });
+            }
+
+            btn.textContent = '✅';
+            setTimeout(() => {
+                btn.textContent = ['⭐', '👍', '👌', '👎', '💩'][rating - 1];
+                btn.disabled = false;
+            }, 1200);
+        } catch (err) {
+            btn.textContent = ['⭐', '👍', '👌', '👎', '💩'][rating - 1];
+            btn.disabled = false;
+        }
+    }
+
+    // ============================================================
+    //  🔥 Claude 호출 (스트리밍)
+    // ============================================================
+    async function callClaudeStream(message, onChunk, onComplete) {
+        const messages = [];
+        const recent = chatHistory.slice(-10);
+        recent.forEach(msg => messages.push({ role: msg.role, content: msg.content }));
+        messages.push({ role: 'user', content: message });
+
+        const body = {
+            model: currentMode,
+            messages: messages,
+            mode: currentMode,
+            token: token || undefined,
+            sessionId: isGuest ? guestSessionId : undefined
+        };
+
+        const response = await fetch(API_BASE + '/api/claude/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            if (err.code === 'login_required') {
+                alert('🔒 FakeCode v2는 로그인 후 사용 가능합니다.');
+                window.location.href = '/login.html';
+            }
+            if (err.code === 'daily_limit') {
+                alert('⛔ 오늘 FakeCode v2 사용 횟수를 모두 소진했습니다. (5회/일)');
+                throw new Error('일일 제한 초과');
+            }
+            if (err.code === 'guest_limit') {
+                alert('🎮 게스트 체험 횟수가 모두 소진되었습니다!');
+                logout();
+            }
+            throw new Error(err.error || `HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                        onComplete();
+                        return;
+                    }
+                    try {
+                        const json = JSON.parse(data);
+                        if (json.content) onChunk(json.content);
+                        if (json.error) throw new Error(json.error);
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    //  전송
+    // ============================================================
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text || isProcessing) return;
+
+        // 명령어 처리 (admin 전용)
+        if (isAdmin && text === '/dashboard') {
+            await showAdminDashboard();
+            return;
+        }
+
+        if (isAdmin && text === '/stats') {
+            const res = await fetch(API_BASE + '/api/learning/stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            const stats = data.stats;
+            addMessage('claude', `
+📊 **PAKE-ai 학습 통계**
+
+🧠 전체 데이터: ${stats.total}개
+👑 admin 데이터: ${stats.adminData}개
+⭐ 고품질 데이터: ${stats.highQuality}개
+📈 평균 평점: ${stats.avgRating}/5
+
+📊 모드별 분포:
+${Object.entries(stats.modeDistribution).map(([k,v]) => `  - ${k}: ${v}개`).join('\n')}
+
+🕐 마지막 업데이트: ${stats.lastUpdated ? new Date(stats.lastUpdated).toLocaleString() : '없음'}
+            `);
+            return;
+        }
+
+        if (isAdmin && text === '/claude48') {
+            const res = await fetch(API_BASE + '/api/claude48/progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            addMessage('claude', `
+🧠 **Claude 4.8 개발 현황**
+
+📊 진행률: ${data.progress}%
+📝 데이터: ${data.dataCount}개 / ${data.targetData}개
+⏳ 남은 데이터: ${data.remainingData}개
+📅 예상 출시: ${data.estimatedRelease}
+🏷️ 버전: ${data.version}
+📌 상태: ${data.status}
+
+💡 Claude 4.8을 사용하려면: /claude48 [질문]
+📢 기증하려면: /donate
+            `);
+            return;
+        }
+
+        if (isAdmin && text.startsWith('/claude48 ')) {
+            const question = text.slice(10);
+            const res = await fetch(API_BASE + '/api/claude48/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, question })
+            });
+            const data = await res.json();
+            addMessage('claude', data.response);
+            return;
+        }
+
+        if (isAdmin && text === '/donate') {
+            const res = await fetch(API_BASE + '/api/claude48/donate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            if (data.success) {
+                addMessage('claude', `🎉 **Claude 4.8 기증 완료!**\n\n${data.letter}`);
+            } else {
+                addMessage('claude', `❌ ${data.message}`);
+            }
+            return;
+        }
+
+        // FakeCode v2 제한 확인
+        if (currentMode === 'fakecodev2' && !isAdmin) {
+            const canUse = await checkDailyLimit();
+            if (!canUse) {
+                alert('⛔ 오늘 FakeCode v2 사용 횟수를 모두 소진했습니다. (5회/일)');
+                return;
+            }
+        }
+
+        addMessage('user', text);
+        lastUserMessage = text;
+        userInput.value = '';
+        userInput.style.height = 'auto';
+
+        messageCount += 1;
+        localStorage.setItem('pake_message_count', messageCount);
+
+        typingIndicator.classList.add('show');
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        isProcessing = true;
+        sendBtn.disabled = true;
+
+        const responseDiv = document.createElement('div');
+        responseDiv.className = 'message claude';
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar-icon';
+        avatar.textContent = 'P';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = '';
+        bubble.appendChild(contentDiv);
+
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback-buttons';
+        feedback.innerHTML = `
+            <button onclick="rateMessage(this, 5)">⭐</button>
+            <button onclick="rateMessage(this, 4)">👍</button>
+            <button onclick="rateMessage(this, 3)">👌</button>
+            <button onclick="rateMessage(this, 2)">👎</button>
+            <button onclick="rateMessage(this, 1)">💩</button>
+        `;
+        bubble.appendChild(feedback);
+
+        responseDiv.appendChild(avatar);
+        responseDiv.appendChild(bubble);
+        chatArea.appendChild(responseDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        let fullResponse = '';
+
+        try {
+            await callClaudeStream(text, (chunk) => {
+                typingIndicator.classList.remove('show');
+                fullResponse += chunk;
+                contentDiv.innerHTML = formatContent(fullResponse);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }, () => {
+                lastAIResponse = fullResponse;
+                chatHistory.push({ role: 'claude', content: fullResponse });
+                saveChat();
+
+                sendNotification('💬 PAKE-ai 응답 완료', fullResponse.slice(0, 60) + '...');
+
+                if (messageCount % AD_INTERVAL === 0 && adsEnabled) {
+                    setTimeout(() => addAdMessage(), 500);
+                }
+
+                if (currentMode === 'fakecodev2' && !isAdmin) {
+                    checkDailyLimit();
+                }
+
+                isProcessing = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            });
+        } catch (err) {
+            typingIndicator.classList.remove('show');
+            if (err.message !== '일일 제한 초과') {
+                contentDiv.innerHTML = `❌ **오류 발생**\n\n${err.message}`;
+            }
+            isProcessing = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+    }
+
+    // ============================================================
+    //  이벤트
+    // ============================================================
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    userInput.addEventListener('input', () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 160) + 'px';
+    });
+
+    // ============================================================
+    //  시작
+    // ============================================================
+    init();
+
+    console.log('🚀 PAKE-ai');
+    console.log('🌿 Fake = Claude 3.5 (Haiku) - 일상생활 (무제한)');
+    console.log('💻 FakeCode = Claude Free (Sonnet) - 코딩 2번째 (무제한)');
+    console.log('🧠 FakeCode v2 = Claude 4.7 (Opus) - 코딩 최강 (하루 5회)');
+    console.log('🛡️ Admin: 광고 없음 + 무제한');
+    console.log('📋 프롬프트 템플릿 지원');
+    console.log('🔔 푸시 알림 지원');
+    console.log('⚡ 스트리밍 응답 지원');
+    console.log('👑 admin 채팅 영구 저장 (Supabase)');
+    console.log('🧠 Claude 4.8 개발 중...');
+    console.log('🔧 관리자: 사이드바에서 Supabase API 설정 가능');
+</script>
+
+</body>
+              </html>
