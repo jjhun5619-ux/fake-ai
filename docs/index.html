@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAKE-ai</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7f7f8;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f9f9f9;
+            border-right: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            flex-shrink: 0;
+            height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .sidebar .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            padding: 4px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar .logo svg {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        .sidebar .logo .version {
+            font-size: 10px;
+            background: #f0f0f0;
+            color: #999;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar .new-chat-btn {
+            width: 100%;
+            padding: 11px;
+            background: #d97757;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+        .sidebar .new-chat-btn:hover {
+            background: #c4653f;
+        }
+
+        .api-settings-section {
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .api-settings-section.show {
+            display: block;
+        }
+        .api-settings-section .api-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .api-settings-section input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-bottom: 6px;
+            background: #fff;
+            outline: none;
+        }
+        .api-settings-section input:focus {
+            border-color: #d97757;
+        }
+        .api-settings-section .api-btn {
+            width: 100%;
+            padding: 6px;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .api-settings-section .api-btn:hover {
+            background: #4338ca;
+        }
+        .api-settings-section .api-status {
+            font-size: 11px;
+            margin-top: 6px;
+            text-align: center;
+        }
+        .api-settings-section .api-status.success {
+            color: #16a34a;
+        }
+        .api-settings-section .api-status.error {
+            color: #dc2626;
+        }
+
+        .template-section {
+            margin-bottom: 12px;
+        }
+        .template-section .template-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .template-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .template-list button {
+            padding: 4px 10px;
+            border: 1px solid #e5e5e5;
+            border-radius: 14px;
+            font-size: 11px;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .template-list button:hover {
+            border-color: #d97757;
+            color: #d97757;
+            background: #fef6f3;
+        }
+        .add-template-btn {
+            padding: 4px 10px;
+            border: 1px dashed #ccc;
+            border-radius: 14px;
+            font-size: 11px;
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .add-template-btn:hover {
+            border-color: #d97757;
+            color: #d97757;
+        }
+
+        .sidebar .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .sidebar .chat-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar .chat-list::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+
+        .sidebar .chat-item {
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+            transition: background 0.2s;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sidebar .chat-item:hover {
+            background: #e8e8e8;
+        }
+        .sidebar .chat-item.active {
+            background: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .sidebar .bottom {
+            border-top: 1px solid #e5e5e5;
+            padding-top: 12px;
+            margin-top: auto;
+        }
+
+        .sidebar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+        .sidebar .user-info .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d97757;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .sidebar .user-info .name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+        .sidebar .user-info .name .guest-tag {
+            font-size: 9px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 4px;
+        }
+        .sidebar .user-info .logout {
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .sidebar .user-info .logout:hover {
+            color: #e74c3c;
+        }
+
+        .sidebar-ad {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 10px;
+            padding: 12px;
+            margin: 8px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-ad:hover {
+            transform: scale(1.02);
+        }
+        .sidebar-ad .ad-title {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .sidebar-ad .ad-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .sidebar-ad .ad-btn {
+            display: inline-block;
+            background: #d97757;
+            color: #fff;
+            padding: 3px 14px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #fff;
+            position: relative;
+        }
+
+        .main-header {
+            padding: 10px 20px;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            background: #fff;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .main-header .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .main-header .title .model-badge {
+            font-size: 10px;
+            background: #f0f0f0;
+            color: #999;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 400;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 4px;
+            background: #f0f0f0;
+            padding: 3px;
+            border-radius: 10px;
+        }
+        .mode-selector button {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            background: transparent;
+            color: #666;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mode-selector button.active {
+            background: #d97757;
+            color: #fff;
+        }
+        .mode-selector button:hover:not(.active) {
+            background: #e5e5e5;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #888;
+            background: #f5f5f5;
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        .header-status .limit-badge {
+            color: #e65100;
+            font-weight: 600;
+        }
+        .header-status .admin-badge {
+            color: #c62828;
+            font-weight: 600;
+        }
+        .header-status .no-ad-badge {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+        .header-status .learning-badge {
+            background: #7c3aed;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            display: none;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 8px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #d1d1d1;
+            border-radius: 10px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 88%;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message.user .bubble {
+            background: #d97757;
+            color: #fff;
+            border-radius: 16px 16px 4px 16px;
+        }
+
+        .message.claude {
+            align-self: flex-start;
+        }
+        .message.claude .bubble {
+            background: #f0f0f0;
+            color: #1a1a1a;
+            border-radius: 16px 16px 16px 4px;
+        }
+
+        .message.ad {
+            align-self: center;
+            max-width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+        .message.ad .bubble {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        .message.ad .bubble:hover {
+            transform: scale(1.02);
+        }
+        .message.ad .bubble .ad-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .message.ad .bubble .ad-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            margin: 4px 0 8px;
+        }
+        .message.ad .bubble .ad-btn {
+            display: inline-block;
+            background: #d97757;
+            color: #fff;
+            padding: 6px 22px;
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .message.ad .bubble .ad-skip {
+            display: block;
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .message.ad .bubble .ad-skip:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .avatar-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .message.user .avatar-icon {
+            background: #d97757;
+            color: #fff;
+        }
+        .message.claude .avatar-icon {
+            background: #e5e5e5;
+            color: #555;
+        }
+
+        .bubble {
+            padding: 10px 14px;
+            line-height: 1.6;
+            font-size: 14px;
+            word-break: break-word;
+            position: relative;
+        }
+
+        .bubble .code-block-wrapper {
+            position: relative;
+            margin: 8px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1e1e1e;
+        }
+
+        .bubble .code-block-wrapper pre {
+            margin: 0;
+            padding: 12px 16px;
+            padding-right: 60px;
+            overflow-x: auto;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: transparent;
+            color: #d4d4d4;
+            border-radius: 0;
+        }
+
+        .bubble .code-block-wrapper .copy-code-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bubble .code-block-wrapper .copy-code-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .bubble .code-block-wrapper .copy-code-btn.copied {
+            background: #10a37f;
+            color: #fff;
+            border-color: #10a37f;
+        }
+
+        .bubble .code-block-wrapper .code-lang {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.3);
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bubble code {
+            background: rgba(0, 0, 0, 0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .message.claude .bubble code {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 3px;
+            margin-top: 6px;
+            justify-content: flex-end;
+            opacity: 0.2;
+            transition: opacity 0.3s;
+        }
+        .bubble:hover .feedback-buttons {
+            opacity: 1;
+        }
+        .feedback-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 1px 3px;
+            transition: transform 0.2s;
+            border-radius: 4px;
+        }
+        .feedback-buttons button:hover {
+            transform: scale(1.3);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .message.user .feedback-buttons {
+            display: none;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            display: none;
+            gap: 10px;
+        }
+        .typing-indicator.show {
+            display: flex;
+        }
+        .typing-dots {
+            background: #f0f0f0;
+            padding: 12px 18px;
+            border-radius: 16px 16px 16px 4px;
+            display: flex;
+            gap: 4px;
+        }
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: #888;
+            border-radius: 50%;
+            animation: dotBounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .typing-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0s;
+        }
+        @keyframes dotBounce {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+                opacity: 0.4;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .input-area {
+            padding: 14px 20px 20px 20px;
+            border-top: 1px solid #e5e5e5;
+            background: #fff;
+            flex-shrink: 0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .input-area textarea {
+            flex: 1;
+            resize: none;
+            padding: 10px 14px;
+            border: 1px solid #d1d1d1;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            min-height: 42px;
+            max-height: 160px;
+            line-height: 1.5;
+            background: #fff;
+            transition: border 0.2s;
+        }
+        .input-area textarea:focus {
+            border-color: #d97757;
+            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.1);
+        }
+        .input-area .send-btn {
+            padding: 10px 20px;
+            background: #d97757;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            height: 42px;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .input-area .send-btn:hover:not(:disabled) {
+            background: #c4653f;
+        }
+        .input-area .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .footer-ad {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+            cursor: pointer;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+        .footer-ad:hover {
+            background: linear-gradient(135deg, #1e1e3a 0%, #1a2745 100%);
+        }
+        .footer-ad .ad-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .footer-ad .ad-text strong {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        .footer-ad .ad-cta {
+            background: #d97757;
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .footer-ad.hidden {
+            display: none;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #333;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+        }
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        .template-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .template-modal.show {
+            display: flex;
+        }
+        .template-modal .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 32px;
+            width: 90%;
+            max-width: 440px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .template-modal .modal-box h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        .template-modal .modal-box input,
+        .template-modal .modal-box textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+            font-family: inherit;
+        }
+        .template-modal .modal-box input:focus,
+        .template-modal .modal-box textarea:focus {
+            border-color: #d97757;
+        }
+        .template-modal .modal-box textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .template-modal .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .template-modal .modal-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .template-modal .modal-actions .btn-save {
+            background: #d97757;
+            color: #fff;
+        }
+        .template-modal .modal-actions .btn-save:hover {
+            background: #c4653f;
+        }
+        .template-modal .modal-actions .btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .template-modal .modal-actions .btn-cancel:hover {
+            background: #e5e5e5;
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                display: none;
+            }
+            .sidebar.mobile-open {
+                display: flex;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 280px;
+                z-index: 1000;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+            .main {
+                height: 100vh;
+            }
+            .main-header {
+                padding: 10px 14px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .main-header .mode-selector {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .main-header .mode-selector button {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            .chat-area {
+                padding: 14px 14px 4px 14px;
+            }
+            .input-area {
+                padding: 10px 14px 14px 14px;
+                flex-wrap: wrap;
+            }
+            .input-area textarea {
+                min-height: 36px;
+                font-size: 13px;
+            }
+            .input-area .send-btn {
+                height: 38px;
+                font-size: 13px;
+                padding: 8px 16px;
+            }
+            .message.ad .bubble {
+                padding: 14px;
+            }
+            .message.ad .bubble .ad-title {
+                font-size: 16px;
+            }
+            .footer-ad {
+                flex-direction: column;
+                text-align: center;
+                padding: 10px 14px;
+            }
+            .footer-ad .ad-text {
+                font-size: 11px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .template-list button {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 모바일 오버레이 ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+    <!-- ===== 템플릿 모달 ===== -->
+    <div class="template-modal" id="templateModal">
+        <div class="modal-box">
+            <h3>📋 프롬프트 템플릿 추가</h3>
+            <input type="text" id="templateNameInput" placeholder="템플릿 이름" />
+            <input type="text" id="templateIconInput" placeholder="아이콘 (예: 🔍)" />
+            <textarea id="templateContentInput" placeholder="프롬프트 내용을 입력하세요..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeTemplateModal()">취소</button>
+                <button class="btn-save" onclick="saveTemplate()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 사이드바 ===== -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <svg viewBox="0 0 1024 1024" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="fGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="45%" stop-color="#dfe7ff"/>
+                        <stop offset="100%" stop-color="#7aa7ff"/>
+                    </linearGradient>
+                    <linearGradient id="aiGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#168cff"/>
+                        <stop offset="55%" stop-color="#315cff"/>
+                        <stop offset="100%" stop-color="#b24cff"/>
+                    </linearGradient>
+                    <linearGradient id="orbitGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#00eaff"/>
+                        <stop offset="50%" stop-color="#168cff"/>
+                        <stop offset="100%" stop-color="#d64cff"/>
+                    </linearGradient>
+                    <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    <filter id="softGlow"><feGaussianBlur stdDeviation="10"/></filter>
+                </defs>
+                <rect width="1024" height="1024" rx="180" fill="#050505"/>
+                <ellipse cx="512" cy="430" rx="270" ry="270" fill="#1268ff" opacity="0.12" filter="url(#softGlow)"/>
+                <path d="M365 655 L430 265 L720 265 L685 340 L505 340 L490 425 L650 425 L615 500 L478 500 L450 655 Z" fill="url(#fGradient)" stroke="#4e8cff" stroke-width="5" filter="url(#glow)"/>
+                <path d="M450 620 L478 500 L615 500" fill="none" stroke="#168cff" stroke-width="14" opacity="0.75"/>
+                <ellipse cx="512" cy="455" rx="315" ry="125" transform="rotate(-25 512 455)" fill="none" stroke="url(#orbitGradient)" stroke-width="15" filter="url(#glow)"/>
+                <path d="M760 185 L773 220 L808 233 L773 246 L760 282 L747 246 L712 233 L747 220 Z" fill="#53dfff" filter="url(#glow)"/>
+                <text x="512" y="805" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-8" fill="url(#fGradient)">Fake</text>
+                <text x="730" y="805" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="150" font-weight="800" letter-spacing="-8" fill="url(#aiGradient)">.ai</text>
+                <path d="M300 850 Q512 875 724 850" fill="none" stroke="url(#orbitGradient)" stroke-width="5" opacity="0.8"/>
+            </svg>
+            <span>PAKE-ai</span>
+            <span class="version">✦ v2</span>
+        </div>
+
+        <button class="new-chat-btn" onclick="newChat()">+ 새 대화</button>
+
+        <!-- 관리자 API 설정 -->
+        <div class="api-settings-section" id="apiSettingsSection">
+            <div class="api-title">🔧 Supabase API 설정</div>
+            <input type="text" id="supabaseUrl" placeholder="Supabase URL" />
+            <input type="password" id="supabaseAnon" placeholder="ANON Key" />
+            <input type="password" id="supabaseService" placeholder="Service Role Key" />
+            <button class="api-btn" onclick="saveSupabaseConfig()">💾 저장 및 연결</button>
+            <div class="api-status" id="apiStatus"></div>
+        </div>
+
+        <!-- 템플릿 -->
+        <div class="template-section" id="templateSection">
+            <div class="template-label">📋 프롬프트 템플릿</div>
+            <div class="template-list" id="templateList">
+                <button class="add-template-btn" onclick="openTemplateModal()">+ 추가</button>
+            </div>
+        </div>
+
+        <div class="sidebar-ad" id="sidebarAd" onclick="window.open('https://chat.enn.kr', '_blank')">
+            <div class="ad-title">💬 chat.enn.kr</div>
+            <div class="ad-desc">무료 AI 채팅 서비스</div>
+            <span class="ad-btn">바로가기 →</span>
+        </div>
+
+        <div class="chat-list" id="chatList"></div>
+
+        <div class="bottom">
+            <div class="user-info">
+                <div class="avatar">👤</div>
+                <div class="name">
+                    Guest
+                    <span class="guest-tag">손님</span>
+                </div>
+                <div class="logout" onclick="logout()">🚪</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 메인 콘텐츠 ===== -->
+    <div class="main">
+        <button class="mobile-menu-btn" onclick="openMobileSidebar()">☰</button>
+        
+        <div class="main-header">
+            <div class="title">
+                💬 대화 시작하기
+                <span class="model-badge">Claude 3.5 Sonnet</span>
+            </div>
+            <div class="mode-selector">
+                <button class="active" onclick="switchMode('chat')">💬 채팅</button>
+                <button onclick="switchMode('summarize')">📝 요약</button>
+                <button onclick="switchMode('translate')">🌐 번역</button>
+            </div>
+            <div class="header-status">
+                <span id="statusText">준비됨</span>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="message claude">
+                <div class="avatar-icon">🤖</div>
+                <div class="bubble">안녕하세요! 저는 PAKE-ai 챗봇입니다. 무엇을 도와드릴까요?</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="userInput" placeholder="메시지를 입력하세요..." onkeydown="handleKeyDown(event)"></textarea>
+            <button class="send-btn" onclick="sendMessage()">전송</button>
+        </div>
+
+        <div class="footer-ad" id="footerAd" onclick="window.open('https://chat.enn.kr', '_blank')">
+            <div class="ad-text">
+                <span>🎉 더 많은 AI 기능을 원하신다면</span>
+                <strong>chat.enn.kr</strong>
+            </div>
+            <div class="ad-cta">바로가기 →</div>
+        </div>
+    </div>
+
+    <script>
+        let currentChatId = null;
+        let currentMode = 'chat';
+        let chats = [];
+
+        function newChat() {
+            const chatId = Date.now();
+            const newChat = {
+                id: chatId,
+                title: '새 대화',
+                messages: [],
+                createdAt: new Date()
+            };
+            chats.push(newChat);
+            currentChatId = chatId;
+            updateChatList();
+            clearChatArea();
+        }
+
+        function updateChatList() {
+            const chatList = document.getElementById('chatList');
+            chatList.innerHTML = chats.map(chat => `
+                <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="selectChat(${chat.id})">
+                    📌 ${chat.title}
+                </div>
+            `).join('');
+        }
+
+        function selectChat(chatId) {
+            currentChatId = chatId;
+            updateChatList();
+        }
+
+        function clearChatArea() {
+            const chatArea = document.getElementById('chatArea');
+            chatArea.innerHTML = '<div class="message claude"><div class="avatar-icon">🤖</div><div class="bubble">안녕하세요! 무엇을 도와드릴까요?</div></div>';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const chatArea = document.getElementById('chatArea');
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerHTML = `<div class="avatar-icon">👤</div><div class="bubble">${message}</div>`;
+            chatArea.appendChild(userMsg);
+
+            input.value = '';
+
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message claude';
+                aiMsg.innerHTML = `<div class="avatar-icon">🤖</div><div class="bubble">이것은 데모 응답입니다. 실제 API를 연결하면 여기에 AI 응답이 표시됩니다.</div>`;
+                chatArea.appendChild(aiMsg);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }, 500);
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-selector button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.add('mobile-open');
+            document.getElementById('sidebarOverlay').classList.add('show');
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        function openTemplateModal() {
+            document.getElementById('templateModal').classList.add('show');
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('templateModal').classList.remove('show');
+        }
+
+        function saveTemplate() {
+            alert('템플릿 저장 기능은 아직 구현되지 않았습니다.');
+            closeTemplateModal();
+        }
+
+        function logout() {
+            alert('로그아웃 기능은 아직 구현되지 않았습니다.');
+        }
+
+        // 초기화
+        newChat();
+    </script>
+</body>
+</html>
